@@ -51,7 +51,7 @@ void parse_command_line(int argc, char **argv, string &ibdfile, string &endMarke
     }
 }
 
-double read_endMarker(const string &endMarker, map<int, int> &bpmap1, map<int, int> &bpmap2, 
+void read_endMarker(const string &endMarker, map<int, int> &bpmap1, map<int, int> &bpmap2, 
         vector<double> &chromlens){
   FileOrGZ<FILE *> in;
   bool ret = in.open(endMarker.c_str(), "r");
@@ -174,18 +174,13 @@ VectorXd run_ibdne(VectorXd &bin1, VectorXd &bin2, VectorXd &bin1_midpoint, Vect
   //so is more efficient to calculate here, save as a local variable, and pass it onto future iteration
   int numChroms = chromlens.size();
   int n_p = 2*numInds*(2*numInds - 2)/2;
-  MatrixXd chr_len(chromlens.size(), 1); // effectively a column vector
-  for(int chr = 0; chr < chromlens.size(); chr++){chr_len(chr, 0) = chromlens[chr];}
-  MatrixXd gen(1, G); //effective a row vector
-  for(int g = 1; g < G+1; g++){gen(0, g-1) = g;}
-  MatrixXd tmp1 = chr_len*gen;
-  //cout << tmp1.topLeftCorner(10, 10) << endl;
+  VectorXd chr_len_v(chromlens.size());
+  for(int chr = 0; chr < chromlens.size(); chr++){chr_len_v(chr) = chromlens[chr];}
+  RowVectorXd gen = VectorXd::LinSpaced(G, 1, G);
+  MatrixXd tmp1 = chr_len_v*gen;
   tmp1 = minIBD*tmp1/50.0;
-  VectorXd chr_len_v = VectorXd(chromlens.size());
-  for(int i = 0; i < chromlens.size(); i++){chr_len_v(i) = chromlens[i];}
   tmp1.colwise() += chr_len_v;
-  RowVectorXd gen_v = VectorXd::LinSpaced(G, 1, G);
-  tmp1.rowwise() += minIBD*minIBD*gen_v/50.0;
+  tmp1.rowwise() -= minIBD*minIBD*gen/50.0;
   RowVectorXd log_term3 = tmp1.colwise().sum().array().log();
 
   MatrixXd T1(bin1.rows(), G+1);

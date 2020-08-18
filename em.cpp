@@ -137,7 +137,7 @@ double updateN(int maxGen, const MatrixXd &T1, const MatrixXd &T2,
     // Set up parameters
     LBFGSBParam<double> param;
     param.epsilon = 1e-5;
-    param.max_iterations = 0;
+    param.max_iterations = 50000;
 
     // Create solver and function object
     LBFGSBSolver<double> solver(param);
@@ -148,6 +148,9 @@ double updateN(int maxGen, const MatrixXd &T1, const MatrixXd &T2,
     //VectorXd grad(N.rows());
     //double loss = fun(N, grad);
     //cout << "loss: " << loss << endl;
+    //fun(N, grad);
+    //cout << grad.transpose() << endl;
+    //exit(0);
     //VectorXd grad_numeric(N.rows());
     //fun.grad_numeric(N, grad_numeric);
     //cout << "numeric gradient: " << grad_numeric.transpose() << endl;
@@ -188,11 +191,8 @@ double lossFunc::evaluate(const VectorXd &x){
 
     VectorXd log_expectation(G+1);
     VectorXd gen = VectorXd::LinSpaced(G, 1, G);
-    // is there a way to avoid such ugly copying?
-    VectorXd log_term3_copy(log_term3.cols());
-    for(int i = 0; i < log_term3.cols(); i++){log_term3_copy(i) = log_term3(i);}
     log_expectation.head(G) = log(n_p) + sum_log_prob_not_coalesce.head(G).array() - (2.0*x).array().log()
-        - minIBD*gen.array()/50.0 + log_term3_copy.array();
+        - minIBD*gen.array()/50.0 + log_term3.transpose().array();
     double log_IBD_beyond_maxGen = log_expectedIBD_beyond_maxGen_given_Ne(x, chr_len_cM, n_p, minIBD);
     log_expectation(G) = log_IBD_beyond_maxGen;
     
@@ -241,9 +241,7 @@ double lossFunc::operator()(const VectorXd& x, VectorXd& grad){
     
     //summing up
     VectorXd log_expectation(G+1);
-    VectorXd log_common_terms_copy(G);
-    for(int i = 0; i < G; i++){log_common_terms_copy(i) = log_common_terms(i);}
-    log_expectation.head(G) = log_common_terms_copy.array() - (2.0*x.array()).log();
+    log_expectation.head(G) = log_common_terms.transpose().array() - (2.0*x.array()).log();
     log_expectation(G) = log_IBD_beyond_maxGen;
 
     VectorXd chain_part1(G+1);

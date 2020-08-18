@@ -16,7 +16,7 @@ using Eigen::RowVectorXd;
 void print_help();
 void parse_command_line(int argc, char **argv, string &ibdfile, string &endMarker, int &numInds,
         string &prefix, double &alpha, double &initN, int &max_iter, int &G, double &minIBD);
-double read_endMarker(const string &endMarker, map<int, int> &map1, map<int, int> &map2, vector<double> &chromlens);
+void read_endMarker(const string &endMarker, map<int, int> &map1, map<int, int> &map2, vector<double> &chromlens);
 void readIBDseg(const string &ibdfile, const map<int, int> &bpmap1, const map<int, int> &bpmap2, 
   VectorXd *bin1, VectorXd *bin2, VectorXd *bin1_midpoint, VectorXd *bin2_midpoint);
 
