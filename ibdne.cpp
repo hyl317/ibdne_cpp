@@ -31,4 +31,5 @@ int main(int argc, char **argv){
     readIBDseg(ibdfile, bpmap1, bpmap2, &bin1, &bin2, &bin1_midpoint, &bin2_midpoint);
     VectorXd finalN = run_ibdne(bin1, bin2, bin1_midpoint, bin2_midpoint, chromlens, 
                 G, initN, max_iter, alpha, minIBD, numInds);
+    write_result(finalN, prefix);
 }

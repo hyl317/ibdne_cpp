@@ -23,6 +23,8 @@ void readIBDseg(const string &ibdfile, const map<int, int> &bpmap1, const map<in
 VectorXd run_ibdne(VectorXd &bin1, VectorXd &bin2, VectorXd &bin1_midpoint, VectorXd &bin2_midpoint, 
     const vector<double> &chromlens, int G, double initN, int max_iter, double alpha, double minIBD, int numInds);
 
+void write_result(const VectorXd &N, string prefix);
+
 // wrappers for file I/O
 template<typename IO_TYPE>
 class FileOrGZ {

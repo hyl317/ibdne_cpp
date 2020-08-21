@@ -190,18 +190,32 @@ VectorXd run_ibdne(VectorXd &bin1, VectorXd &bin2, VectorXd &bin1_midpoint, Vect
         n_p, log_term3, N, minIBD, alpha, chr_len_v);
   int iter = 1;
   double diff = numeric_limits<double>::infinity();
-  while (diff > 1e-3 && iter < max_iter){
-    cout << "iteration " << iter << " done: " << N.transpose() << endl;
+  while (abs(diff) > 0.1 && iter < max_iter){
+    fprintf(stdout, "iteration %d done, diff=%lf\n", iter, diff);
     updatePosterior(T1, T2, N, bin1_midpoint, bin2_midpoint);
     double fun1 = updateN(G, T1, T2, bin1, bin2, bin1_midpoint, bin2_midpoint, n_p, 
         log_term3, N, minIBD, alpha, chr_len_v);
-    diff = abs(fun1 - fun);
+    diff = fun - fun1;
     fun = fun1;
     iter++;
   }
   return N;
 }
 
+void write_result(const VectorXd &N, string prefix){
+  string filename = prefix + ".ne";
+  FileOrGZ<FILE *> out;
+    bool ret = out.open(filename.c_str(), "w");
+    if(!ret){
+        fprintf(stderr, "cannot open %s for writing output\n", filename.c_str());
+        exit(1);
+    }
+
+    for(int g = 0; g < N.rows(); g++){
+      out.printf("%d\t%lf\n", g+1, N(g));
+    }
+    out.close();
+}
 
 // specialization for FILE I/O wrapper
 // open <filename> using standard FILE *

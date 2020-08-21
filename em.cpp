@@ -4,7 +4,6 @@
 #include <math.h>
 #include "Eigen/Dense"
 #include "Eigen/Core"
-#include <LBFGSB.h>
 
 
 void updatePosterior(MatrixXd &T1, MatrixXd &T2, const VectorXd &N, 
@@ -113,7 +112,7 @@ double updateN(int maxGen, const MatrixXd &T1, const MatrixXd &T2,
         const VectorXd &bin1_midpoint, const VectorXd &bin2_midpoint, 
         int n_p, const RowVectorXd &log_term3, VectorXd &N, double minIBD, double alpha, const VectorXd &chr_len_cM)
 {
-    using namespace LBFGSpp;
+    using namespace cppoptlib;
     VectorXd log_total_len_each_bin1 = bin1.array().log() + bin1_midpoint.array().log();
     VectorXd log_total_len_each_bin2 = bin2.array().log() + bin2_midpoint.array().log();
     MatrixXd T1_copy(T1);
@@ -134,15 +133,11 @@ double updateN(int maxGen, const MatrixXd &T1, const MatrixXd &T2,
         log_total_expected_ibd_len_each_gen(i) = ret;
     }
 
-    // Set up parameters
-    LBFGSBParam<double> param;
-    param.epsilon = 1e-5;
-    param.max_iterations = 50000;
 
     // Create solver and function object
-    LBFGSBSolver<double> solver(param);
-    VectorXd lb = VectorXd::Constant(N.rows(), 1e2);
-    VectorXd ub = VectorXd::Constant(N.rows(), 1e7);
+    BfgsSolver<lossFunc> solver;
+    //VectorXd lb = VectorXd::Constant(N.rows(), 1e2);
+    //VectorXd ub = VectorXd::Constant(N.rows(), 1e7);
     lossFunc fun(log_total_expected_ibd_len_each_gen, chr_len_cM, log_term3, n_p, minIBD, alpha);
     //for testing only
     //VectorXd grad(N.rows());
@@ -156,10 +151,8 @@ double updateN(int maxGen, const MatrixXd &T1, const MatrixXd &T2,
     //cout << "numeric gradient: " << grad_numeric.transpose() << endl;
     //exit(0);
     //end testing
-    double fx;
-    int niter = solver.minimize(fun, N, fx, lb, ub);
-    cout << "niter: " << niter << endl;
-    return fx;
+    solver.minimize(fun, N);
+    return fun.value(N);
 }
 
 double log_expectedIBD_beyond_maxGen_given_Ne(const VectorXd &N, const VectorXd &chr_len_cM,
@@ -180,7 +173,7 @@ double log_expectedIBD_beyond_maxGen_given_Ne(const VectorXd &N, const VectorXd 
 
 }
 
-double lossFunc::evaluate(const VectorXd &x){
+double lossFunc::value(const VectorXd &x){
     // first calculate value of loss evaluated at x
     int G = x.rows();
     VectorXd aux(G+1);
@@ -203,8 +196,7 @@ double lossFunc::evaluate(const VectorXd &x){
 }
 
 
-double lossFunc::operator()(const VectorXd& x, VectorXd& grad){
-    double loss = evaluate(x);
+void lossFunc::gradient(const VectorXd& x, VectorXd& grad){
     // now calculate the gradient
     int G = x.rows();
     MatrixXd jacMatrix = MatrixXd::Zero(G+1,G);
@@ -264,24 +256,22 @@ double lossFunc::operator()(const VectorXd& x, VectorXd& grad){
     penalty_term(G-1) = 2*x(G-1)-4*x(G-2)+2*x(G-3);
     penalty_term(G-2) = 10*x(G-2)-4*x(G-1)-8*x(G-3)+2*x(G-4);
     for(int i = 0; i < G; i++){grad(i) = chi2_term(i) + alpha*penalty_term(i);}
-    //cout << "analytical grad: " << grad.transpose() << endl;
-    return loss;
 
 }
 
-void lossFunc::grad_numeric(const VectorXd &x, VectorXd &grad){
-    double epsilon = 1e-6;
-    // approximate gradient numerically
-    for(int i = 0; i < x.rows(); i++){
-        VectorXd x_up(x);
-        VectorXd x_low(x);
-        x_up(i) += epsilon;
-        x_low(i) -= epsilon;
-        double upper = evaluate(x_up);
-        double lower = evaluate(x_low);
-        grad(i) = (upper - lower)/(2*epsilon);
-    }
-}
+// void lossFunc::grad_numeric(const VectorXd &x, VectorXd &grad){
+//     double epsilon = 1e-6;
+//     // approximate gradient numerically
+//     for(int i = 0; i < x.rows(); i++){
+//         VectorXd x_up(x);
+//         VectorXd x_low(x);
+//         x_up(i) += epsilon;
+//         x_low(i) -= epsilon;
+//         double upper = evaluate(x_up);
+//         double lower = evaluate(x_low);
+//         grad(i) = (upper - lower)/(2*epsilon);
+//     }
+// }
 
 double second_diff_sum(const VectorXd &N){
     VectorXd first_diff(N.rows()-1);

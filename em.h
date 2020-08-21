@@ -2,9 +2,13 @@
 #define EM_H
 
 #include "Eigen/Dense"
+#include "meta.h"
+#include "problem.h"
+#include "solver/bfgssolver.h"
 
 using namespace Eigen;
 using namespace std;
+using namespace cppoptlib;
 
 void updatePosterior(MatrixXd &T1, MatrixXd &T2, const VectorXd &N, 
         const VectorXd &bin1_midpoint, const VectorXd &bin2_midpoint);
@@ -25,8 +29,7 @@ inline double logaddexp(double d1, double d2){
 double second_diff_sum(const VectorXd &N);
 void shift(const VectorXd &source, VectorXd &dest, int shift, double replace=0.0);
 
-class lossFunc
-{
+class lossFunc : public Problem<double>{
 private:
     VectorXd log_total_expected_ibd_len_each_gen;
     VectorXd chr_len_cM;
@@ -39,9 +42,8 @@ public:
         RowVectorXd log_term3_, int n_p_, double minIBD_, double alpha_) : 
         log_total_expected_ibd_len_each_gen(log_total_expected_ibd_len_each_gen_),
         chr_len_cM(chr_len_cM_), log_term3(log_term3_), n_p(n_p_), minIBD(minIBD_), alpha(alpha_) {}
-    double evaluate(const VectorXd &x);
-    void grad_numeric(const VectorXd &x, VectorXd &grad);
-    double operator()(const VectorXd &x, VectorXd &grad);
+    double value(const VectorXd &x);
+    void gradient(const VectorXd &x, VectorXd &grad);
 };
 
 

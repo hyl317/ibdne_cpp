@@ -1,5 +1,5 @@
 #command for compiling
-g++ -Wall -Wextra -I/fs/cbsubscb09/storage/yilei/tools/lib/eigen-3.3.7/ -I/fs/cbsubscb09/storage/yilei/tools/lib/LBFGSpp/include/ -lz -O3 -o ibdne *.cpp
+g++ -Wall -Wextra -I/fs/cbsubscb09/storage/yilei/tools/lib/eigen-3.3.7/ -I/fs/cbsubscb09/storage/yilei/tools/lib/CppNumericSolver/include/cppoptlib/ -lz -O3 -o ibdne *.cpp
 
 #command for running
 ./ibdne -i /fs/cbsubscb09/storage/yilei/simulate/MS_ALL/MS.fin.vcf/FIN.MS.unr.str.ibd.gz -e /fs/cbsubscb09/storage/yilei/simulate/MS_ALL/MS.fin.vcf/endMarker.MS.fin --alpha 0.01 -o fin.MS.200.str --max-iter 250 -G 200 -n 535 --minIBD 2.5

@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/fs/cbsubscb09/storage/yilei/tools/lib/eigen-3.3.7/",
-                "/fs/cbsubscb09/storage/yilei/tools/lib/LBFGSpp/include/"
+                "/fs/cbsubscb09/storage/yilei/tools/lib/LBFGSpp/include/",
+                "/fs/cbsubscb09/storage/yilei/tools/lib/CppNumericSolver/include/cppoptlib/"
             ],
             "defines": [],
             "compilerPath": "/usr/local/gcc-7.3.0/bin/gcc",
